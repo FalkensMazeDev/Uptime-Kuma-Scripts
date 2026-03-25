@@ -1,28 +1,46 @@
 #!/usr/bin/env python3
 """
 update_kuma_monitors.py
-
+ 
 Enforces a standard configuration across every Uptime Kuma HTTP(s) monitor.
 All target values live in the CONFIG block below — set any to None to leave
 that field untouched on existing monitors.
-
-Install dependency:
-    pip install uptime-kuma-api --break-system-packages
-
+ 
+Install dependencies:
+    pip install uptime-kuma-api python-dotenv --break-system-packages
+ 
+Configuration:
+    Connection credentials are loaded from a .env file in the same directory
+    as this script (or any parent directory). Create a .env file with:
+ 
+        KUMA_URL=http://localhost:3001
+        KUMA_USERNAME=admin
+        KUMA_PASSWORD=your_password_here
+ 
+    These can also be set as regular environment variables instead.
+ 
 Usage:
     python update_kuma_monitors.py
 """
-
+ 
+import os
 import sys
 import time
+from pathlib import Path
+ 
+from dotenv import load_dotenv
 from uptime_kuma_api import UptimeKumaApi, MonitorType
-
+ 
+# Load .env from the script's directory (falls back to environment variables
+# already set in the shell if no .env file is found)
+load_dotenv(dotenv_path=Path(__file__).parent / ".env")
+ 
 # ══════════════════════════════════════════════════════════════════
-#  CONNECTION
+#  CONNECTION  (set via .env or environment variables)
 # ══════════════════════════════════════════════════════════════════
-KUMA_URL      = "http://localhost:3001"   # e.g. "https://uptime.example.com"
-KUMA_USERNAME = "admin"
-KUMA_PASSWORD = "your_password_here"
+KUMA_URL      = os.environ.get("KUMA_URL",      "http://localhost:3001")
+KUMA_USERNAME = os.environ.get("KUMA_USERNAME", "admin")
+KUMA_PASSWORD = os.environ.get("KUMA_PASSWORD", "")
 
 # ══════════════════════════════════════════════════════════════════
 #  UNIVERSAL SETTINGS  (applied to every monitor type)
