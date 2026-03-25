@@ -35,6 +35,10 @@ A collection of Python scripts for automating and managing [Uptime Kuma](https:/
    ```bash
    pip install -r requirements.txt
    ```
+   **or**
+   ```bash
+   pip install -r requirements.txt --break-system-packages
+   ```
 
 ---
 
