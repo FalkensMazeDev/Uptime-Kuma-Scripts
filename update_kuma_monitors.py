@@ -1,42 +1,116 @@
 #!/usr/bin/env python3
 """
 update_kuma_monitors.py
- 
+
 Enforces a standard configuration across every Uptime Kuma HTTP(s) monitor.
 All target values live in the CONFIG block below — set any to None to leave
 that field untouched on existing monitors.
- 
-Install dependencies:
-    pip install uptime-kuma-api python-dotenv --break-system-packages
- 
+
+Install dependency:
+    pip install uptime-kuma-api --break-system-packages
+
 Configuration:
-    Connection credentials are loaded from a .env file in the same directory
-    as this script (or any parent directory). Create a .env file with:
- 
+    All settings below can be overridden via a .env file placed in the same
+    directory as this script, or via shell environment variables. Shell
+    variables take precedence over the .env file.
+
+    Example .env:
         KUMA_URL=http://localhost:3001
         KUMA_USERNAME=admin
         KUMA_PASSWORD=your_password_here
- 
-    These can also be set as regular environment variables instead.
- 
+
+        TARGET_INTERVAL=300
+        TARGET_RETRY_INTERVAL=60
+        TARGET_MAX_RETRIES=1
+        TARGET_RESEND_INTERVAL=0
+        TARGET_METHOD=HEAD
+        TARGET_EXPIRY_NOTIFICATION=true
+        TARGET_DOMAIN_EXPIRY_NOTIFICATION=true
+        TARGET_MAX_REDIRECTS=10
+        # Leave optional fields unset (or empty) to leave them untouched:
+        # TARGET_TIMEOUT=
+        # TARGET_IGNORE_TLS=
+        # TARGET_ACCEPTED_STATUSCODES=
+
 Usage:
     python update_kuma_monitors.py
 """
- 
+
 import os
 import sys
 import time
 from pathlib import Path
- 
-from dotenv import load_dotenv
 from uptime_kuma_api import UptimeKumaApi, MonitorType
- 
-# Load .env from the script's directory (falls back to environment variables
-# already set in the shell if no .env file is found)
-load_dotenv(dotenv_path=Path(__file__).parent / ".env")
- 
+
+
 # ══════════════════════════════════════════════════════════════════
-#  CONNECTION  (set via .env or environment variables)
+#  .ENV LOADER  (no third-party deps)
+# ══════════════════════════════════════════════════════════════════
+
+def _load_dotenv(env_path: Path) -> None:
+    """Parse a .env file and populate os.environ — no third-party deps required."""
+    if not env_path.is_file():
+        return
+    with env_path.open() as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key   = key.strip()
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key, value)   # never overwrite existing shell vars
+
+
+_load_dotenv(Path(__file__).parent / ".env")
+
+
+# ══════════════════════════════════════════════════════════════════
+#  TYPE-SAFE ENV HELPERS
+# ══════════════════════════════════════════════════════════════════
+
+def _env_int(key: str, default: int) -> int:
+    """Read an env var as int, falling back to default if unset or empty."""
+    val = os.environ.get(key, "").strip()
+    return int(val) if val else default
+
+
+def _env_bool(key: str, default: bool) -> bool:
+    """Read an env var as bool. Accepts true/false/1/0 (case-insensitive)."""
+    val = os.environ.get(key, "").strip().lower()
+    if val in ("true", "1", "yes"):
+        return True
+    if val in ("false", "0", "no"):
+        return False
+    return default
+
+
+def _env_int_or_none(key: str, default):
+    """Read an env var as int, returning None (or default) if unset or empty."""
+    val = os.environ.get(key, "").strip()
+    if not val:
+        return default
+    return int(val)
+
+
+def _env_bool_or_none(key: str, default):
+    """Read an env var as bool, returning None (or default) if unset or empty."""
+    val = os.environ.get(key, "").strip().lower()
+    if val in ("true", "1", "yes"):
+        return True
+    if val in ("false", "0", "no"):
+        return False
+    return default
+
+
+def _env_str_or_none(key: str, default):
+    """Read an env var as str, returning None (or default) if unset or empty."""
+    val = os.environ.get(key, "").strip()
+    return val if val else default
+
+
+# ══════════════════════════════════════════════════════════════════
+#  CONNECTION  (set via .env or shell environment variables)
 # ══════════════════════════════════════════════════════════════════
 KUMA_URL      = os.environ.get("KUMA_URL",      "http://localhost:3001")
 KUMA_USERNAME = os.environ.get("KUMA_USERNAME", "admin")
@@ -47,24 +121,24 @@ KUMA_PASSWORD = os.environ.get("KUMA_PASSWORD", "")
 # ══════════════════════════════════════════════════════════════════
 
 # How often to check (seconds). UI label: "Heartbeat Interval"
-TARGET_INTERVAL =  os.environ.get("TARGET_INTERVAL",      300)
+TARGET_INTERVAL = _env_int("TARGET_INTERVAL", 300)
 
 # How long to wait between retry attempts after a failure (seconds).
 # UI label: "Heartbeat Retry Interval"
-TARGET_RETRY_INTERVAL =  os.environ.get("TARGET_RETRY_INTERVAL",      60)
+TARGET_RETRY_INTERVAL = _env_int("TARGET_RETRY_INTERVAL", 60)
 
 # How many consecutive failures before marking as DOWN and alerting.
 # UI label: "Retries"  |  field: maxretries
 #   0 = alert on the very first failure
 #   1 = alert after 2 failures  <-- your requirement
 #   2 = alert after 3 failures  ... and so on
-TARGET_MAX_RETRIES =  os.environ.get("TARGET_MAX_RETRIES",      1)
+TARGET_MAX_RETRIES = _env_int("TARGET_MAX_RETRIES", 1)
 
 # How many times to re-send the DOWN alert while the monitor stays down.
 # UI label: "Resend Notification if still down X times"
 #   0 = send the alert once, never resend
 #   1 = resend once after the first alert, 2 = resend twice, etc.
-TARGET_RESEND_INTERVAL =  os.environ.get("TARGET_RESEND_INTERVAL",      0)    # set to None to leave untouched
+TARGET_RESEND_INTERVAL = _env_int("TARGET_RESEND_INTERVAL", 0)
 
 # ══════════════════════════════════════════════════════════════════
 #  HTTP-ONLY SETTINGS  (skipped for ping / TCP / DNS / etc.)
@@ -72,28 +146,30 @@ TARGET_RESEND_INTERVAL =  os.environ.get("TARGET_RESEND_INTERVAL",      0)    # 
 
 # HTTP method to use.  "HEAD" is faster (no body download).
 # Options: "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"
-TARGET_METHOD =  os.environ.get("TARGET_METHOD",      "HEAD")
+TARGET_METHOD = os.environ.get("TARGET_METHOD", "HEAD")
 
 # Alert when the TLS/SSL certificate is about to expire.
 # UI label: "Certificate Expiry Notification"
-TARGET_EXPIRY_NOTIFICATION =  os.environ.get("TARGET_EXPIRY_NOTIFICATION",      True)
+TARGET_EXPIRY_NOTIFICATION = _env_bool("TARGET_EXPIRY_NOTIFICATION", True)
 
 # Alert when the domain name registration is about to expire.
 # UI label: "Domain Name Expiry Notification"
-TARGET_DOMAIN_EXPIRY_NOTIFICATION =  os.environ.get("TARGET_DOMAIN_EXPIRY_NOTIFICATION",      True)
+TARGET_DOMAIN_EXPIRY_NOTIFICATION = _env_bool("TARGET_DOMAIN_EXPIRY_NOTIFICATION", True)
 
 # Maximum redirects to follow. 0 = disable redirect following.
-TARGET_MAX_REDIRECTS =  os.environ.get("TARGET_MAX_REDIRECTS",      10)     # set to None to leave untouched
+# Leave unset or empty in .env to leave untouched on existing monitors.
+TARGET_MAX_REDIRECTS = _env_int_or_none("TARGET_MAX_REDIRECTS", 10)
 
 # Request timeout in seconds.
-# UI label: "Request Timeout"
-TARGET_TIMEOUT =  os.environ.get("TARGET_TIMEOUT",      None)         # e.g. 30  — set to None to leave untouched
+# UI label: "Request Timeout" — leave unset or empty to leave untouched.
+TARGET_TIMEOUT = _env_int_or_none("TARGET_TIMEOUT", None)
 
 # Ignore TLS/SSL certificate errors (useful for self-signed certs).
-TARGET_IGNORE_TLS =  os.environ.get("TARGET_IGNORE_TLS",      None)      # True or False — set to None to leave untouched
+# Leave unset or empty to leave untouched.
+TARGET_IGNORE_TLS = _env_bool_or_none("TARGET_IGNORE_TLS", None)
 
-# Accepted HTTP status code ranges. None = leave untouched.
-TARGET_ACCEPTED_STATUSCODES =  os.environ.get("TARGET_ACCEPTED_STATUSCODES",      None)   # e.g. ["200-299"]
+# Accepted HTTP status code ranges. Leave unset or empty to leave untouched.
+TARGET_ACCEPTED_STATUSCODES = _env_str_or_none("TARGET_ACCEPTED_STATUSCODES", None)
 
 # ══════════════════════════════════════════════════════════════════
 #  SCRIPT BEHAVIOUR
@@ -219,6 +295,21 @@ def edit_with_retry(api: UptimeKumaApi, mid: int, patch: dict) -> UptimeKumaApi:
 
 
 def main():
+    missing = [var for var, val in [
+        ("KUMA_URL",      KUMA_URL),
+        ("KUMA_USERNAME", KUMA_USERNAME),
+        ("KUMA_PASSWORD", KUMA_PASSWORD),
+    ] if not val]
+    if missing:
+        print("[ERROR] The following required environment variables are not set:")
+        for var in missing:
+            print(f"         {var}")
+        print("\nCreate a .env file in the script's directory with:")
+        print("  KUMA_URL=http://localhost:3001")
+        print("  KUMA_USERNAME=admin")
+        print("  KUMA_PASSWORD=your_password_here")
+        sys.exit(1)
+
     print(f"Connecting to {KUMA_URL} …")
     try:
         api = connect()
