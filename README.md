@@ -40,7 +40,7 @@ A collection of Python scripts for automating and managing [Uptime Kuma](https:/
 
 ## ⚙️ Configuration
 
-Both scripts require credentials and connection details for your Uptime Kuma instance. These can be provided via environment variables or a `.env` file in the project root.
+The update_kuma_monitors.pw script requires credentials and connection details for your Uptime Kuma instance. These can be provided via environment variables or a `.env` file in the project root.
 
 ### Environment Variables
 
@@ -49,6 +49,19 @@ Both scripts require credentials and connection details for your Uptime Kuma ins
 | `KUMA_URL` | Base URL of your Uptime Kuma instance | `http://localhost:3001` |
 | `KUMA_USERNAME` | Your Uptime Kuma username | `admin` |
 | `KUMA_PASSWORD` | Your Uptime Kuma password | `yourpassword` |
+|---|---|---|
+| `TARGET_INTERVAL` | How often to check (seconds). UI label: "Heartbeat Interval" | 60 |
+| `TARGET_RETRY_INTERVAL` | How long to wait between retry attempts after a failure (seconds). UI label: "Heartbeat Retry Interval" | 60 |
+| `TARGET_MAX_RETRIES` | How many consecutive failures before marking as DOWN and alerting. UI label: "Retries" | `yourpassword` |
+| `TARGET_RESEND_INTERVAL` | How many times to re-send the DOWN alert while the monitor stays down. 0 is send once | 0 |
+| `TARGET_METHOD` | HTTP method to use.  "HEAD" is faster (no body download). Options: "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE" | HEAD |
+| `TARGET_EXPIRY_NOTIFICATION` | Alert when the TLS/SSL certificate is about to expire. UI label: "Certificate Expiry Notification" | true |
+| `TARGET_DOMAIN_EXPIRY_NOTIFICATION` | Alert when the domain name registration is about to expire. UI label: "Domain Name Expiry Notification" | true |
+|---|---|---|
+| `TARGET_MAX_REDIRECTS` | Maximum redirects to follow. 0 = disable redirect following. Leave unset or empty in .env to leave untouched on existing monitors. | 10 |
+| `TARGET_TIMEOUT` | Request timeout in seconds. UI label: "Request Timeout" — leave unset or empty to leave untouched. | None |
+| `TARGET_IGNORE_TLS` | Ignore TLS/SSL certificate errors (useful for self-signed certs). Leave unset or empty to leave untouched. | None |
+| `TARGET_ACCEPTED_STATUSCODES` | Accepted HTTP status code ranges. Leave unset or empty to leave untouched. | None |
 
 ### Using a `.env` File
 
