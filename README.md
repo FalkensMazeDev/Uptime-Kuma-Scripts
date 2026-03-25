@@ -26,7 +26,7 @@ A collection of Python scripts for automating and managing [Uptime Kuma](https:/
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/your-username/uptime-kuma-scripts.git
+   git clone https://github.com/FalkensMazeDev/uptime-kuma-scripts.git
    cd uptime-kuma-scripts
    ```
 
