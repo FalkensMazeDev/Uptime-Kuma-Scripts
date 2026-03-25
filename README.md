@@ -59,7 +59,7 @@ Create a `.env` file in the project root:
      KUMA_USERNAME=admin
      KUMA_PASSWORD=your_password_here
 
-     TARGET_INTERVAL=300
+     TARGET_INTERVAL=60
      TARGET_RETRY_INTERVAL=60
      TARGET_MAX_RETRIES=1
      TARGET_RESEND_INTERVAL=0
