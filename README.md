@@ -1,6 +1,6 @@
 # 🟢 Uptime Kuma Scripts
 
-A collection of Python scripts for automating and managing [Uptime Kuma](https://github.com/louislam/uptime-kuma) monitors via its API. Whether you're bulk-importing monitors from a spreadsheet or programmatically updating existing ones, these scripts are designed to save you time and reduce manual work.
+A collection of Python scripts for automating and managing [Uptime Kuma](https://github.com/louislam/uptime-kuma) monitors via its API. Whether you're bulk-importing monitors from a spreadsheet or programmatically updating existing ones, these scripts are designed to save you time and reduce manual work. These scripts have been tested for Uptime Kuma v2.
 
 ---
 
