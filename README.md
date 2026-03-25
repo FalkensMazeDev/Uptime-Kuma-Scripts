@@ -58,7 +58,19 @@ Create a `.env` file in the project root:
 KUMA_URL=http://localhost:3001
 KUMA_USERNAME=admin
 KUMA_PASSWORD=yourpassword
+TARGET_INTERVAL = 300
+TARGET_RETRY_INTERVAL = 60
+TARGET_MAX_RETRIES = 1
+TARGET_RESEND_INTERVAL = 0
+TARGET_METHOD = "HEAD"
+TARGET_EXPIRY_NOTIFICATION = True
+TARGET_DOMAIN_EXPIRY_NOTIFICATION = True
+TARGET_MAX_REDIRECTS = 10
+TARGET_TIMEOUT = None
+TARGET_IGNORE_TLS = None
+TARGET_ACCEPTED_STATUSCODES = None
 ```
+None tells the update monitor script to not update.
 
 > ⚠️ **Never commit your `.env` file.** It is included in `.gitignore` by default.
 
