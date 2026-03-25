@@ -14,8 +14,7 @@ Usage:
 
 CSV format (one column, header optional):
     url
-    https://example.com
-    http://www.example.com
+    example.com
     subdomain.example.com
     ...
 """
