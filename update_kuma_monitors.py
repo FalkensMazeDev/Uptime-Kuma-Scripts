@@ -47,24 +47,24 @@ KUMA_PASSWORD = os.environ.get("KUMA_PASSWORD", "")
 # ══════════════════════════════════════════════════════════════════
 
 # How often to check (seconds). UI label: "Heartbeat Interval"
-TARGET_INTERVAL = 300
+TARGET_INTERVAL =  os.environ.get("TARGET_INTERVAL",      300)
 
 # How long to wait between retry attempts after a failure (seconds).
 # UI label: "Heartbeat Retry Interval"
-TARGET_RETRY_INTERVAL = 60
+TARGET_RETRY_INTERVAL =  os.environ.get("TARGET_RETRY_INTERVAL",      60)
 
 # How many consecutive failures before marking as DOWN and alerting.
 # UI label: "Retries"  |  field: maxretries
 #   0 = alert on the very first failure
 #   1 = alert after 2 failures  <-- your requirement
 #   2 = alert after 3 failures  ... and so on
-TARGET_MAX_RETRIES = 1
+TARGET_MAX_RETRIES =  os.environ.get("TARGET_MAX_RETRIES",      1)
 
 # How many times to re-send the DOWN alert while the monitor stays down.
 # UI label: "Resend Notification if still down X times"
 #   0 = send the alert once, never resend
 #   1 = resend once after the first alert, 2 = resend twice, etc.
-TARGET_RESEND_INTERVAL = 0    # set to None to leave untouched
+TARGET_RESEND_INTERVAL =  os.environ.get("TARGET_RESEND_INTERVAL",      0)    # set to None to leave untouched
 
 # ══════════════════════════════════════════════════════════════════
 #  HTTP-ONLY SETTINGS  (skipped for ping / TCP / DNS / etc.)
@@ -72,28 +72,28 @@ TARGET_RESEND_INTERVAL = 0    # set to None to leave untouched
 
 # HTTP method to use.  "HEAD" is faster (no body download).
 # Options: "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE"
-TARGET_METHOD = "HEAD"
+TARGET_METHOD =  os.environ.get("TARGET_METHOD",      "HEAD")
 
 # Alert when the TLS/SSL certificate is about to expire.
 # UI label: "Certificate Expiry Notification"
-TARGET_EXPIRY_NOTIFICATION = True
+TARGET_EXPIRY_NOTIFICATION =  os.environ.get("TARGET_EXPIRY_NOTIFICATION",      True)
 
 # Alert when the domain name registration is about to expire.
 # UI label: "Domain Name Expiry Notification"
-TARGET_DOMAIN_EXPIRY_NOTIFICATION = True
+TARGET_DOMAIN_EXPIRY_NOTIFICATION =  os.environ.get("TARGET_DOMAIN_EXPIRY_NOTIFICATION",      True)
 
 # Maximum redirects to follow. 0 = disable redirect following.
-TARGET_MAX_REDIRECTS = 10     # set to None to leave untouched
+TARGET_MAX_REDIRECTS =  os.environ.get("TARGET_MAX_REDIRECTS",      10)     # set to None to leave untouched
 
 # Request timeout in seconds.
 # UI label: "Request Timeout"
-TARGET_TIMEOUT = None         # e.g. 30  — set to None to leave untouched
+TARGET_TIMEOUT =  os.environ.get("TARGET_TIMEOUT",      None)         # e.g. 30  — set to None to leave untouched
 
 # Ignore TLS/SSL certificate errors (useful for self-signed certs).
-TARGET_IGNORE_TLS = None      # True or False — set to None to leave untouched
+TARGET_IGNORE_TLS =  os.environ.get("TARGET_IGNORE_TLS",      None)      # True or False — set to None to leave untouched
 
 # Accepted HTTP status code ranges. None = leave untouched.
-TARGET_ACCEPTED_STATUSCODES = None   # e.g. ["200-299"]
+TARGET_ACCEPTED_STATUSCODES =  os.environ.get("TARGET_ACCEPTED_STATUSCODES",      None)   # e.g. ["200-299"]
 
 # ══════════════════════════════════════════════════════════════════
 #  SCRIPT BEHAVIOUR
